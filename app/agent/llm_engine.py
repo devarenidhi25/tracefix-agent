@@ -17,37 +17,61 @@ def query_ollama(prompt: str) -> str:
     else:
         return "LLM request failed"
 
-def llm_debug_analysis(error_trace: str) -> dict:
+
+def llm_debug_analysis(history: list, current_error: str) -> dict:
     prompt = f"""
-You are a debugging assistant.
+You are a strict debugging assistant.
 
-Analyze the following error and provide:
+Analyze the error using previous debugging context.
 
-1. Root cause
-2. Suggested fixes (list)
+IMPORTANT RULES:
+- Do NOT guess advanced issues like cyclic dependency unless clearly indicated
+- Focus on common developer mistakes first
+- Be concise and accurate
+- Output ONLY in the format below
 
-Error:
-{error_trace}
+Previous Errors:
+{history}
 
-Respond in this format:
-Cause: ...
+Current Error:
+{current_error}
+
+Respond EXACTLY like this:
+
+Cause: <short clear reason>
+
 Fixes:
-- ...
-- ...
+- <fix 1>
+- <fix 2>
+- <fix 3>
 """
 
     response = query_ollama(prompt)
 
-    # very basic parsing
     cause = "LLM could not determine cause"
     fixes = []
 
-    if "Cause:" in response:
-        parts = response.split("Fixes:")
-        cause = parts[0].replace("Cause:", "").strip()
+    try:
+        if "Cause:" in response:
+            cause_part = response.split("Cause:")[1]
 
-        if len(parts) > 1:
-            fixes = [f.strip("- ").strip() for f in parts[1].split("\n") if f.strip()]
+            if "Fixes:" in cause_part:
+                cause_text, fixes_part = cause_part.split("Fixes:")
+                cause = cause_text.strip()
+
+                fixes = [
+                    line.strip("- ").strip()
+                    for line in fixes_part.split("\n")
+                    if line.strip().startswith("-")
+                ]
+            else:
+                cause = cause_part.strip()
+
+    except Exception:
+        pass
+
+    if not fixes:
+        fixes = ["No reliable fixes generated. Try checking logs or environment."]
 
     return {
         "cause": cause,
