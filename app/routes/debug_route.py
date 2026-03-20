@@ -1,16 +1,18 @@
 from fastapi import APIRouter
 from app.schemas.debug_schema import DebugRequest, DebugResponse
+from app.parsers.error_parser import parse_error
 
 router = APIRouter()
 
 
 @router.post("/debug", response_model=DebugResponse)
 def debug_error(request: DebugRequest):
-    # temporary dummy response
+    parsed = parse_error(request.error_trace)
+
     return DebugResponse(
-        language="Python",
-        error_type="Unknown",
-        cause="This is a placeholder response",
-        possible_fixes=["Fix will be generated soon"],
-        confidence=0.0
+        language=parsed["language"],
+        error_type=parsed["error_type"],
+        cause="Basic parsing completed",
+        possible_fixes=["Fix generation coming next"],
+        confidence=0.3
     )
