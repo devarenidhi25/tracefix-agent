@@ -18,20 +18,21 @@ def query_ollama(prompt: str) -> str:
         return "LLM request failed"
 
 
-def llm_debug_analysis(history: list, current_error: str) -> dict:
+def llm_debug_analysis(context: str, current_error: str) -> dict:
     prompt = f"""
 You are a strict debugging assistant.
 
-Analyze the error using previous debugging context.
+Analyze the error using previous debugging steps.
 
 IMPORTANT RULES:
-- Do NOT guess advanced issues like cyclic dependency unless clearly indicated
-- Focus on common developer mistakes first
+- Do NOT repeat fixes that were already suggested
+- If previous fix did not work, suggest an alternative approach
+- Use previous steps to refine the solution
+- Focus on practical developer mistakes
 - Be concise and accurate
-- Output ONLY in the format below
 
-Previous Errors:
-{history}
+Debugging Context:
+{context}
 
 Current Error:
 {current_error}
@@ -41,9 +42,9 @@ Respond EXACTLY like this:
 Cause: <short clear reason>
 
 Fixes:
-- <fix 1>
-- <fix 2>
-- <fix 3>
+- <new fix 1>
+- <new fix 2>
+- <new fix 3>
 """
 
     response = query_ollama(prompt)
@@ -60,9 +61,9 @@ Fixes:
                 cause = cause_text.strip()
 
                 fixes = [
-                    line.strip("- ").strip()
+                    line.strip("- ").strip("* ").strip()
                     for line in fixes_part.split("\n")
-                    if line.strip().startswith("-")
+                    if line.strip().startswith(("-", "*"))
                 ]
             else:
                 cause = cause_part.strip()

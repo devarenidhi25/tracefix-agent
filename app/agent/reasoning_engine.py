@@ -6,13 +6,19 @@ def generate_reasoning(parsed_data: dict) -> dict:
     fixes = []
 
     if error_type == "Missing Dependency":
+        # Fix common package mismatch
+        if module == "dotenv":
+            module_name = "python-dotenv"
+        else:
+            module_name = module
+
         cause = f"The required module '{module}' is not installed in your environment."
+
         fixes = [
-            f"Install the package using: pip install {module}",
+            f"Install the package using: pip install {module_name}",
             "Ensure you are using the correct virtual environment",
             "Check if the package name is correct"
         ]
-
     elif error_type == "Import Error":
         cause = "There is an issue with importing a module or function."
         fixes = [
