@@ -22,5 +22,6 @@ def debug_error(request: DebugRequest):
         error_type=parsed["error_type"],
         cause=output["cause"],
         possible_fixes=output["fixes"],
-        confidence=0.8
+        confidence=0.8,
+        execution=result.get("execution")  # ⭐ NEW
     )

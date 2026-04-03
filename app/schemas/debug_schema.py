@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, Dict, Any
 
 
 class DebugRequest(BaseModel):
@@ -13,3 +13,5 @@ class DebugResponse(BaseModel):
     cause: str
     possible_fixes: list[str]
     confidence: float
+
+    execution: Optional[Dict[str, Any]] = None  # ⭐ NEW
